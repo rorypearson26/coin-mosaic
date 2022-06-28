@@ -1,3 +1,4 @@
+from logging import NullHandler
 from pathlib import Path
 
 SRC_PATH = Path(__file__).parent.resolve()
@@ -5,20 +6,23 @@ INPUT_FILES = SRC_PATH / "input_files"
 
 
 class Setup:
-    def __init__(self, filename, dimensions) -> None:
-        self.filename = self.get_filename(filename)
-        self.spec_width, self.spec_height = process_dimensions(dimensions)
+    def __init__(self, args) -> None:
+        self.filename = self.get_filename(args.file)
+        self.spec_width, self.spec_height = process_dimensions(
+            args.dimension, args.length)
+        self.coin = args.coin
 
     def get_filename(self, filename):
         filename = INPUT_FILES / filename
         return filename
 
 
-def process_dimensions(dimensions):
+def process_dimensions(dimension, length):
     """Populate width and height appropriately based on specified dimensions.
 
-    Args:
-        dimensions (tuple(`str`, `int`)): Tuple in the form of specified dimension and 
-            the corresponding value (in mm). To specify a width of 3200mm you would put 
-            in `('w': 3200)`.
     """
+    if dimension not in ['w', 'h']:
+        raise AttributeError('`w` or `h` has not been specified for coin mosaic specified dimension.')
+    width = length if dimension == 'w' else None
+    height = length if dimension == 'h' else None
+    return width, height
