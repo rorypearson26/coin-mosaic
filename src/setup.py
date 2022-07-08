@@ -1,21 +1,21 @@
-from logging import NullHandler
 from pathlib import Path
+from src.coins import Coin
 
 SRC_PATH = Path(__file__).parent.resolve()
 INPUT_FILES = SRC_PATH / "input_files"
 
 
 class Setup:
-    def __init__(self, args) -> None:
+    def __init__(self, args):
         self.filename = self.get_filename(args.file)
         self.spec_width, self.spec_height = process_dimensions(
             args.dimension, args.length)
-        self.coin = args.coin
-
+        self.coin = Coin[args.coin.upper()]
+        
     def get_filename(self, filename):
         filename = INPUT_FILES / filename
         return filename
-
+    
 
 def process_dimensions(dimension, length):
     """Populate width and height appropriately based on specified dimensions.
