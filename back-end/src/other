@@ -1,0 +1,172 @@
+import numpy as np
+from cv2 import cv
+from PIL import ImageColor
+from random import randint, uniform
+import time
+from flask import Flask, json, request, jsonify
+from datetime import datetime, timedelta
+import math
+
+
+class Input:
+    def __init__(self, image, user_input):
+        self.time = int(user_input["data"]["time"])
+        self.coin_size = float(user_input["data"]["coinSize"])
+        self.sliders = user_input["sliders"]
+        self.limits = user_input["limits"]
+        self.img = cv.imdecode(
+            np.frombuffer(image.read(), np.uint8), cv.IMREAD_GRAYSCALE
+        )
+        self.desired_width = float(user_input["data"]["width"])
+        self.actual_height = self.img.shape[0]
+        self.actual_width = self.img.shape[1]
+        self.bg_colour = user_input["backgroundColour"]
+        self.min_gap = int(user_input["minGap"])
+        self.sizer()
+
+    def sizer(self):
+        coins_in_width = self.desired_width / self.coin_size
+        self.percentage = coins_in_width / self.actual_width
+
+
+class Output:
+    def __init__(self, outer, inner=None):
+        self.outer = outer
+        self.inner = inner
+        self.toJSON(outer, inner)
+
+    def toJSON(self, outer, inner=None):
+        self.outer_JSON = json.dumps(outer.__dict__)
+        if inner != None:
+            self.inner_JSON = json.dumps(inner.__dict__)
+            self.full_JSON = (
+                '{"outer":' + self.outer_JSON + ', "inner":' + self.inner_JSON + "}"
+            )
+        else:
+            self.full_JSON = '{"outer":' + self.outer_JSON + ', "inner": "None"}'
+
+
+class OuterMosaic:
+    """OuterMosaic object repesents the core coin array, or can be used as the base
+    when the inner array is used to add resolution to the coin mosaic."""
+
+    def __init__(self, input_object):
+        self.width = int(input_object.actual_width * input_object.percentage)
+        self.height = int(input_object.actual_height * input_object.percentage)
+        self.time = int(input_object.time)
+        self.sliders = input_object.sliders
+        self.min_gap = input_object.min_gap
+        self.limits = input_object.limits
+        self.actual_width = input_object.actual_width
+        self.actual_height = input_object.actual_height
+        self.bg_colour = input_object.bg_colour
+        self.coin_size = input_object.coin_size
+        self.pixel_array = cv.resize(
+            input_object.img, (self.width, self.height), interpolation=cv.INTER_AREA
+        )
+        self.coin_array = np.empty([self.height, self.width], dtype=("U20"))
+        self.stats = {}
+
+
+class InnerMosaic:
+    """InnerMosaic object repesents the secondary optional layer to add resolution.
+    The image is cropped by the equivalent of a coin radius of each edge."""
+
+    def __init__(self, outer, input_object):
+        self.width = outer.width - 1
+        self.height = outer.height - 1
+        pixels_in_half_coin = int(round(0.5 / input_object.percentage))
+        right_limit = input_object.actual_width - pixels_in_half_coin
+        bottom_limit = input_object.actual_height - pixels_in_half_coin
+        inner_img = input_object.img[
+            pixels_in_half_coin:bottom_limit,
+            pixels_in_half_coin:right_limit,
+        ]
+        self.pixel_array = cv.resize(
+            inner_img, (self.width, self.height), interpolation=cv.INTER_AREA
+        )
+        self.coin_array = np.empty([self.height, self.width], dtype=("U20"))
+
+
+def setup(image, user_input):
+    """Function to deal with the main setup"""
+    u = Input(image, user_input)
+    outer = OuterMosaic(u)
+    inner = InnerMosaic(outer, u)
+    get_stats(outer, inner)
+    return (u, outer, inner)
+
+
+
+
+
+
+
+def get_stats(outer, inner=None):
+    """Function to create some stats about the mosaic being designed."""
+
+    outer_total_coins = outer.width * outer.height
+    inner_total_coins = 0
+    if inner != None:
+        inner_total_coins = inner.width * inner.height
+
+    total_coins = outer_total_coins + inner_total_coins
+    total_time_str = convert_timedelta(timedelta(seconds=int(total_coins * outer.time)))
+    total_mass = round(total_coins * coin_mass(outer.coin_size, 1.6), 1)
+    stat_dict = {
+        "totalCoins": total_coins,
+        "totalTime": total_time_str,
+        "totalMass": total_mass,
+    }
+    outer.stats = stat_dict
+
+
+def convert_timedelta(timedelta_seconds):
+    days = timedelta_seconds.days
+    hours = timedelta_seconds.seconds // 3600
+    minutes = (timedelta_seconds.seconds // 60) % 60
+    if days == 1:
+        return_str = f"{days} Day, {hours} Hours, {minutes} Minutes"
+    elif days > 1:
+        return_str = f"{days} Days, {hours} Hours, {minutes} Minutes"
+    else:
+        return_str = f"{hours} Hours, {minutes} Minutes"
+
+    return return_str
+
+
+def coin_mass(coin_size, coin_thickness):
+    density = 7500.0  # kg/m^3
+    area = (((coin_size * 0.5) / 1000.0) ** 2) * math.pi
+    volume = (area * coin_thickness) / 1000.0
+    mass = density * volume
+    return mass
+
+
+def main(image, user_input):
+    """Entry point for code to be run"""
+
+    input_object, outer, inner = setup(image, user_input)
+    colour_shades = get_colour_shades(outer.sliders, 0.2)
+
+    start_time = round(time.time() * 1000, 3)
+
+    colour_mapping(outer.sliders, colour_shades, outer)
+    outer_time = round(time.time() * 1000, 3)
+
+    colour_mapping(outer.sliders, colour_shades, inner)
+    inner_time = round(time.time() * 1000, 3)
+
+    outer.coin_array = outer.coin_array.tolist()
+    inner.coin_array = inner.coin_array.tolist()
+    list_time = round(time.time() * 1000, 3)
+
+    print(
+        f"outer time {round(outer_time - start_time, 3)}ms inner time {round(inner_time-outer_time, 3)}ms to list time {round(list_time-inner_time, 3)}ms"
+    )
+    # print(outer.coin_array)
+    del outer.pixel_array, inner.pixel_array
+    output = Output(outer, inner)
+    pounds = (inner.width * inner.height + outer.height * outer.width) / 100
+    time_taken = int(round(time.time() * 1000)) - start_time
+    return output.full_JSON
