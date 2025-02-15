@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "coin-mosaic",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
