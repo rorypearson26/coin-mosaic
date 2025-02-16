@@ -1,6 +1,3 @@
-/.vscode
-**/pycache/**
-*.pyc
-/tests
-*/input_files/*
-/.idea
+/node_modules
+/.yarn
+*storybook.log
