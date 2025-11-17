@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { GBP_ONE_PENNY } from "@/components/Coin/CoinTypes";
 import { ColourSchemeToggle } from "@/components/ColorSchemeToggle/ColourSchemeToggle";
 import GreyscaleImageManipulator from "@/features/ImageManipulationPage/GreyscaleImageManipulator";
 import UploadModal from "@/features/UploadModal/UploadModal";
@@ -8,10 +9,12 @@ import { useGreyscaleImage } from "@/hooks/useGreyscaleImage";
 import {
   Center,
   Container,
+  Divider,
   Grid,
   Image,
   MantineProvider,
   Stack,
+  Table,
   Title,
 } from "@mantine/core";
 
@@ -38,6 +41,12 @@ export function HomePage() {
     }
   }, [coinCount]);
 
+  const coinWeight = useMemo(() => {
+    if (coinCount !== undefined) {
+      return ((coinCount * GBP_ONE_PENNY.massInGrams) / 1000).toFixed(2);
+    }
+  }, [coinCount]);
+
   useEffect(() => {
     if (coinMosaicInputArray !== undefined) {
       mutateCoinMosaic({ intensityEnumArray: coinMosaicInputArray });
@@ -49,10 +58,10 @@ export function HomePage() {
 
   return (
     <MantineProvider defaultColorScheme="dark">
-      <Container size="md">
+      <Container size="md" mb="md">
         <Grid align="center">
           <Grid.Col span={9}>
-            <Title p="sm">Coin Mosaic</Title>
+            <Title p="sm">Image Edit Crafts</Title>
           </Grid.Col>
           <Grid.Col span={3}>
             <ColourSchemeToggle />
@@ -62,15 +71,38 @@ export function HomePage() {
           <UploadModal mutate={mutateGreyscale} />
         </Center>
         {!!greyData && (
-          <Stack mt="lg" h={300} align="stretch" justify="flex-start" gap="md">
+          <Stack mt="lg" h={300} align="stretch" justify="flex-start" gap="sm">
             <Image radius="md" src={greyData.outputImageUrl} />
             <GreyscaleImageManipulator
               greyData={greyData}
               setCoinMosaicInputArray={setCoinMosaicInputArray}
             />
-            <h1>Total 1ps: {coinCount}</h1>
-            <h1>Cost: £{coinCost}</h1>
-            {!!coinData && isCoinSuccess && <Image src={coinData} />}
+
+            {!!coinData && isCoinSuccess && (
+              <Stack gap="xs" justify="center">
+                <Table captionSide="bottom">
+                  <Table.Caption>
+                    Some stats about your mosaic made from 1p coins
+                  </Table.Caption>
+                  <Table.Tbody>
+                    <Table.Tr key="weight">
+                      <Table.Td>Total 1p Coins</Table.Td>
+                      <Table.Td>{coinCount}</Table.Td>
+                    </Table.Tr>
+                    <Table.Tr key="cost">
+                      <Table.Td>Cost</Table.Td>
+                      <Table.Td>£{coinCost}</Table.Td>
+                    </Table.Tr>
+                    <Table.Tr key="weight">
+                      <Table.Td>Mosaic Weight</Table.Td>
+                      <Table.Td>{coinWeight}Kg</Table.Td>
+                    </Table.Tr>
+                  </Table.Tbody>
+                </Table>
+                <Image radius="md" src={coinData} />
+              </Stack>
+            )}
+            <Divider m="lg" />
           </Stack>
         )}
       </Container>

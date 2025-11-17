@@ -1,13 +1,13 @@
-import 'react-image-crop/dist/ReactCrop.css';
+import "react-image-crop/dist/ReactCrop.css";
 
-import { useMemo, useState } from 'react';
-import { CiWarning } from 'react-icons/ci';
-import ReactCrop, { Crop } from 'react-image-crop';
+import { useMemo, useState } from "react";
+import { CiWarning } from "react-icons/ci";
+import ReactCrop, { Crop } from "react-image-crop";
 
-import useCroppedImage from '@/hooks/useCroppedImage';
-import { Alert, Button, Container, Image, Stack } from '@mantine/core';
+import useCroppedImage from "@/hooks/useCroppedImage";
+import { Alert, Button, Container, Image, Stack } from "@mantine/core";
 
-import UploadFileButton from '../../components/UploadFile/UploadFileButton';
+import UploadFileButton from "../../components/UploadFile/UploadFileButton";
 
 interface Props {
   onSubmit: (url: string) => void;
@@ -45,7 +45,7 @@ export function InputForm({ onSubmit }: Props) {
     const extension = /[.]/.exec(filename)
       ? /[^.]+$/.exec(filename)?.[0]
       : undefined;
-    const validExtensions = ["png", "jpg"];
+    const validExtensions = ["png", "jpg", "jpeg"];
     if (extension !== undefined && validExtensions.includes(extension)) {
       return true;
     }
@@ -53,7 +53,7 @@ export function InputForm({ onSubmit }: Props) {
   };
 
   return (
-    <Stack>
+    <div>
       <UploadFileButton
         file={file}
         fileHandler={handleFileUpload}
@@ -66,9 +66,10 @@ export function InputForm({ onSubmit }: Props) {
           title="Invalid File Uploaded"
           icon={<CiWarning />}
         >
-          Upload file needs to be jpg or png
+          Upload file needs to be jpg/jpeg or png
         </Alert>
       )}
+      {imgSrc !== "" && <h4>Select Crop Area</h4>}
       <ReactCrop
         crop={crop}
         onChange={(_, percent) => setCrop(percent)}
@@ -88,6 +89,6 @@ export function InputForm({ onSubmit }: Props) {
           </Container>
         </Stack>
       )}
-    </Stack>
+    </div>
   );
 }

@@ -1,10 +1,10 @@
-import { FunctionComponent, useEffect, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from "react";
 
-import GreyscaleBoundarySlider from '@/components/GreyscaleFromArray/GreyscaleBoundarySlider';
-import useGreyscaleBandings from '@/hooks/useGreyscaleBandings';
-import { CreateGreyscaleImageOutput } from '@/hooks/useGreyscaleImage';
-import { useImageScaling } from '@/hooks/useImageScaling';
-import { Button, Center, Image, Slider, Stack, Text } from '@mantine/core';
+import GreyscaleBoundarySlider from "@/components/GreyscaleFromArray/GreyscaleBoundarySlider";
+import useGreyscaleBandings from "@/hooks/useGreyscaleBandings";
+import { CreateGreyscaleImageOutput } from "@/hooks/useGreyscaleImage";
+import { useImageScaling } from "@/hooks/useImageScaling";
+import { Button, Center, Image, Slider, Stack, Text } from "@mantine/core";
 
 export interface GreyscaleImageManipulatorProps {
   greyData: CreateGreyscaleImageOutput;
@@ -107,7 +107,7 @@ const GreyscaleImageManipulator: FunctionComponent<
           { value: 400, label: "400cm" },
         ]}
       />
-      <Image alt="cropped" src={imageUrl} />
+      <Image radius="md" alt="cropped" src={imageUrl} />
       <GreyscaleBoundarySlider setValue={setValue} />
       <Button onClick={() => setCoinMosaicInputArray(processedArray)}>
         Get Coin Mosaic
