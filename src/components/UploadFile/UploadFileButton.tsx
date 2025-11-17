@@ -1,4 +1,4 @@
-import { FileButton, Button, Group, Text } from "@mantine/core";
+import { Button, FileButton, Group, Text } from "@mantine/core";
 
 interface Props {
   buttonText: string;
@@ -22,7 +22,7 @@ const UploadFileButton: React.FC<Props> = ({
       {file && (
         <Group>
           <Text size="sm" ta="center" mt="sm">
-            Picked file: {file.name}
+            Selected file: {file.name}
           </Text>
         </Group>
       )}
